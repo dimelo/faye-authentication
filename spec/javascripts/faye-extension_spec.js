@@ -35,7 +35,7 @@ describe('Faye extension', function() {
         var signature = jwtsign.serialize("macaroni");
 
         jasmine.Ajax.stubRequest('/faye/auth').andReturn({
-          'responseText': '{"signature": "' + signature + '"}'
+          'responseText': '{"signatures": [{"channel" : "/foobar", "clientId": "'+ self.client._dispatcher.clientId +'", "signature" : "' + signature + '"}]}'
         });
         callback();
       }, self.client);
@@ -108,19 +108,19 @@ describe('Faye extension', function() {
         var request = jasmine.Ajax.requests.mostRecent();
         var params = queryString.parse(request.params);
 
-        var jwtsign_bad   = new jwt.WebToken('{"clientId": "' + params['message[clientId]'] + '", "channel": "/foo", "exp": 1}', '{"alg": "HS256"}');
+        var jwtsign_bad   = new jwt.WebToken('{"clientId": "' + params['messages[0][clientId]'] + '", "channel": "/foo", "exp": 1}', '{"alg": "HS256"}');
         var signature_bad = jwtsign_bad.serialize("macaroni");
 
-        var jwtsign_good   = new jwt.WebToken('{"clientId": "' + params['message[clientId]'] + '", "channel": "/foo", "exp": 2803694528}', '{"alg": "HS256"}');
+        var jwtsign_good   = new jwt.WebToken('{"clientId": "' + params['messages[0][clientId]'] + '", "channel": "/foo", "exp": 2803694528}', '{"alg": "HS256"}');
         var signature_good = jwtsign_good.serialize("macaroni");
 
         request.response({
           'status' : 200,
-          'responseText': '{"signature": "' + signature_bad + '"}'
+          'responseText': '{"signatures": [{"channel": "/foo", "clientId": "'+ params['messages[0][clientId]'] +'", "signature":  "' + signature_bad + '"}]}'
         });
 
         jasmine.Ajax.stubRequest('/faye/auth').andReturn({
-          'responseText': '{"signature": "' + signature_good + '"}'
+          'responseText': '{"signatures": [{"channel": "/foo", "clientId": "'+ params['messages[0][clientId]'] +'", "signature":  "' + signature_good + '"}]}'
         });
 
       }, 1000);

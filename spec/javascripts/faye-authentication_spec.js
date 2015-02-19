@@ -138,7 +138,7 @@ describe('faye-authentication', function() {
       var self = this;
       setTimeout(function() {
         var request = jasmine.Ajax.requests.mostRecent();
-        expect(request.data()['message[channel]'][0]).toBe('/foobar');
+        expect(request.data()['messages[0][channel]'][0]).toBe('/foobar');
         done();
       }, 500);
     });
@@ -148,10 +148,10 @@ describe('faye-authentication', function() {
 
       beforeEach(function() {
         jasmine.Ajax.stubRequest('/faye/auth').andReturn({
-          'responseText': '{"signature": "foobarsignature"}'
+          'responseText': '{"signatures": [{"channel": "/foobar", "clientId": "1234", "signature": "foobarsignature"}]}'
         });
 
-        this.dispatcher = {connectionType: "fake", sendMessage: function() {}, selectTransport: function() { }};
+        this.dispatcher = {connectionType: "fake", clientId: '1234', sendMessage: function() {}, selectTransport: function() { }};
         spyOn(this.dispatcher, 'sendMessage');
         spyOn(this.dispatcher, 'selectTransport');
         Faye.extend(this.dispatcher, Faye.Publisher)
@@ -162,6 +162,7 @@ describe('faye-authentication', function() {
 
         this.client.handshake(function() {
           self.client._dispatcher = self.dispatcher;
+
           self.client.subscribe('/foobar');
 
           setTimeout(function() {
@@ -200,8 +201,8 @@ describe('faye-authentication', function() {
 
         this.client.handshake(function() {
           self.client._dispatcher = self.dispatcher;
-          self.client.publish('/foo', {text: 'hallo'});
-          self.client.subscribe('/foo');
+          self.client.publish('/foobar', {text: 'hallo'});
+          self.client.subscribe('/foobar');
 
           setTimeout(function() {
             var calls = self.dispatcher.sendMessage.calls.all();
@@ -209,7 +210,7 @@ describe('faye-authentication', function() {
             var publish_call = calls[calls.length - 2];
             var subscribe_message = subscribe_call.args[0];
             var publish_message = publish_call.args[0];
-            expect(publish_message.channel).toBe('/foo');
+            expect(publish_message.channel).toBe('/foobar');
             expect(subscribe_message.channel).toBe('/meta/subscribe');
             expect(publish_message.signature).toBe('foobarsignature');
             expect(subscribe_message.signature).toBe('foobarsignature');
