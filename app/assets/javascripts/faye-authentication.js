@@ -5,6 +5,7 @@ function FayeAuthentication(client, endpoint, options) {
   this._outbox = {};
   this._options = options || {};
   this._waiting_signatures = [];
+  this._timer = null;
 }
 
 FayeAuthentication.prototype.endpoint = function() {
@@ -12,12 +13,18 @@ FayeAuthentication.prototype.endpoint = function() {
 };
 
 FayeAuthentication.prototype.resolveWaitingSignatures = function() {
+  if (this._waiting_signatures.length == 0) {
+    return ;
+  }
   var self = this;
   var messages = [];
   $.each(this._waiting_signatures, function(key, params) {
     messages.push(params);
   });
   this._waiting_signatures = [];
+  messages = messages.sort(function(a, b) {
+    return (a.channel > b.channel);
+  });
 
   $.post(self.endpoint(), {messages: messages}, function(response) {
     $.each(messages, function(key, params) {
@@ -60,9 +67,10 @@ FayeAuthentication.prototype.signMessage = function(message, callback) {
       callback(message);
     });
     this._waiting_signatures.push({channel: channel, clientId: clientId});
-    setTimeout(function() {
+    clearTimeout(this._timer);
+    this._timer = setTimeout(function() {
       self.resolveWaitingSignatures();
-    }, 50);
+    }, 200);
   }
 }
 

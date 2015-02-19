@@ -61,7 +61,6 @@ describe('Faye extension', function() {
       }, 500);
     });
 
-
     describe('signature', function() {
 
       beforeEach(function() {
@@ -189,19 +188,42 @@ describe('Faye extension', function() {
         done();
       }, 500);
 
-    })
+    });
 
-    it('should make two ajax calls when dealing with two channels', function(done) {
+    it('should make two ajax calls when dealing with two channels in a not-so-short period', function(done) {
       this.client.subscribe('/foobar');
       this.client.publish('/foobar', {text: 'hallo'});
       this.client.publish('/foobar', {text: 'hallo'});
 
-      this.client.subscribe('/bar');
-      this.client.publish('/bar', {text: 'hallo'});
-      this.client.publish('/bar', {text: 'hallo'});
+      var self = this;
 
       setTimeout(function() {
-        expect(jasmine.Ajax.requests.count()).toBe(3); // Handshake + auth * 2
+        self.client.subscribe('/bar');
+        self.client.publish('/bar', {text: 'hallo'});
+        self.client.publish('/bar', {text: 'hallo'});
+
+        setTimeout(function() {
+          expect(jasmine.Ajax.requests.count()).toBe(3); // Handshake + auth * 2
+          done();
+        }, 500);
+      }, 250);
+    });
+
+    it('should make only one ajax calls when subscribing several times in a short period', function(done) {
+      var self = this;
+      this.client.subscribe('/foobar');
+      setTimeout(function() {
+        self.client.subscribe('/foobar2');
+        setTimeout(function() {
+          self.client.subscribe('/foobar3');
+        }, 50)
+      }, 50);
+      setTimeout(function() {
+        expect(jasmine.Ajax.requests.count()).toBe(2); // Handshake + auth
+        var request = jasmine.Ajax.requests.mostRecent();
+        expect(request.data()['messages[0][channel]'][0]).toBe('/foobar');
+        expect(request.data()['messages[1][channel]'][0]).toBe('/foobar2');
+        expect(request.data()['messages[2][channel]'][0]).toBe('/foobar3');
         done();
       }, 500);
     });
