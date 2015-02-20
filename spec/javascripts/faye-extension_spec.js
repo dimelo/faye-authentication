@@ -181,7 +181,6 @@ describe('Faye extension', function() {
     it('should make only one ajax call when dealing with one channel', function(done) {
       this.client.subscribe('/foobar');
       this.client.publish('/foobar', {text: 'hallo'});
-      this.client.publish('/foobar', {text: 'hallo'});
 
       setTimeout(function() {
         expect(jasmine.Ajax.requests.count()).toBe(2); // Handshake + auth * 1
@@ -193,6 +192,22 @@ describe('Faye extension', function() {
     it('should make two ajax calls when dealing with two channels in a not-so-short period', function(done) {
       this.client.subscribe('/foobar');
       this.client.publish('/foobar', {text: 'hallo'});
+
+      var self = this;
+
+      setTimeout(function() {
+        self.client.subscribe('/bar');
+        self.client.publish('/bar', {text: 'hallo'});
+
+        setTimeout(function() {
+          expect(jasmine.Ajax.requests.count()).toBe(3); // Handshake + auth * 2
+          done();
+        }, 500);
+      }, 250);
+    });
+
+    it('should make two ajax calls when dealing with three channels and separating calls', function(done) {
+      this.client.subscribe('/foobar');
       this.client.publish('/foobar', {text: 'hallo'});
 
       var self = this;
@@ -200,10 +215,19 @@ describe('Faye extension', function() {
       setTimeout(function() {
         self.client.subscribe('/bar');
         self.client.publish('/bar', {text: 'hallo'});
-        self.client.publish('/bar', {text: 'hallo'});
+
+        self.client.subscribe('/baz');
+        self.client.publish('/baz', {text: 'hallo'});
 
         setTimeout(function() {
           expect(jasmine.Ajax.requests.count()).toBe(3); // Handshake + auth * 2
+          var first_auth = jasmine.Ajax.requests.at(1);
+          var second_auth = jasmine.Ajax.requests.at(2);
+          expect(first_auth.data()['messages[0][channel]'][0]).toBe('/foobar');
+          expect(first_auth.data()['messages[1]']).toBe(undefined);
+
+          expect(second_auth.data()['messages[0][channel]'][0]).toBe('/bar');
+          expect(second_auth.data()['messages[1][channel]'][0]).toBe('/baz');
           done();
         }, 500);
       }, 250);
