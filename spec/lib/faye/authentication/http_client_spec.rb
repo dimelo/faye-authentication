@@ -14,6 +14,17 @@ describe Faye::Authentication::HTTPClient do
       expect(request).to have_been_made
     end
 
+    it 'should not add a signature if the channel is whitelisted' do
+      message = {'channel' => '/foo/bar', 'clientId' => 'http'}
+      message['data'] = 'hello'
+      request = stub_request(:post, "http://www.example.com").with(:body => {:message => JSON.dump(message)}).to_return(:status => 200, :body => "", :headers => {})
+      whitelist = lambda do |channel|
+        channel.start_with?('/foo/')
+      end
+      Faye::Authentication::HTTPClient.publish('http://www.example.com', '/foo/bar', "hello", 'my private key', { whitelist: whitelist })
+      expect(request).to have_been_made
+    end
+
   end
 
 end
