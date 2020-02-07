@@ -28,5 +28,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'jasmine', '~> 2.0'
   spec.add_development_dependency 'rack', '~> 1.5'
   spec.add_development_dependency 'thin', '~> 1.6'
-  spec.add_development_dependency 'webmock', '~> 1.18'
+  spec.add_development_dependency 'webmock', '~> 3.8.1'
 end
