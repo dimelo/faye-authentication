@@ -1,3 +1,6 @@
+## 1.12.0
+  - No longer retry and fetch a new signature after errors unrelated to `Faye::Authentication` (#15)
+
 ## 1.11.0
   - Optional authentication for `Faye::Authentication::HTTPClient` (#12)
 
