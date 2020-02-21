@@ -1,5 +1,4 @@
 describe('Faye extension', function() {
-
   beforeEach(function() {
     Faye.logger = {error: function() {}};
     this.client = new Faye.Client('http://localhost:9296/faye');
