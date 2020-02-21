@@ -71,7 +71,6 @@ describe('Faye extension', function() {
         this.dispatcher = {connectionType: "fake", clientId: '1234', sendMessage: function() {}, selectTransport: function() { }};
         spyOn(this.dispatcher, 'sendMessage');
         spyOn(this.dispatcher, 'selectTransport');
-        Faye.extend(this.dispatcher, Faye.Publisher)
       });
 
       it('should add the signature to subscribe message', function(done) {
